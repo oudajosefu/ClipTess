@@ -24,7 +24,7 @@ let langCode: string = 'jpn';
 
 app.whenReady().then(() => {
 	const tray = new Tray(
-		path.join(__dirname, '../assets/camera.metering.matrix@3x.png')
+		path.join(app.getAppPath(), 'assets/camera.metering.matrix@3x.png')
 	);
 	tray.setIgnoreDoubleClickEvents(true);
 
@@ -35,8 +35,8 @@ app.whenReady().then(() => {
 				{
 					id: 'screenshot',
 					icon: path.join(
-						__dirname,
-						'../assets/plus.viewfinder@3x.png'
+						app.getAppPath(),
+						'assets/plus.viewfinder@3x.png'
 					),
 					label: ' Screenshot -> Clipboard',
 					type: 'normal',
@@ -71,61 +71,70 @@ app.on('will-quit', () => {
 	globalShortcut.unregisterAll();
 });
 
-const screenCapture = () => {
-	return new Promise((resolve, reject) => {
-		exec(
-			'screencapture -isc',
-			(error: any, stdout: unknown, stderr: any) => {
-				if (error) {
-					reject(error);
-					return;
-				}
-				resolve(stdout);
-			}
-		);
-	});
+const setLang = (checkedLangCode: string) => {
+	langCode = checkedLangCode;
 };
 
-const recognizeText = (langId: string, imageFilePath: any) => {
+const execShellCommand = (cmd: string) => {
 	return new Promise((resolve, reject) => {
-		exec(
-			`tesseract -l ${langId} ${imageFilePath} -`,
-			(error: any, stdout: unknown, stderr: any) => {
-				if (error) {
-					reject(error);
-					return;
-				}
-				resolve(stdout);
+		exec(cmd, (error: string, stdout: string, stderr: string) => {
+			if (error) {
+				console.error(error);
+				reject(error);
 			}
-		);
-	});
-};
-
-const ocrImageToClipboard = (langCode: string) => {
-	screenCapture()
-		.then((stdout) => {
-			try {
-				fs.writeFile(
-					path.join(__dirname, '../src/temp.png'),
-					clipboard.readImage().toPNG(),
-					(err: any) => {
-						if (err) throw err;
-					}
-				);
-			} catch (err) {
-				console.log(`\nFile writing errors:\n${err}\n`);
-			}
-			recognizeText(langCode, path.join(__dirname, '../src/temp.png'))
-				.then((stdoutText) => {
-					clipboard.writeText(stdoutText);
-				})
-				.catch((err) => {
-					console.log(`\nTesseract recognition error: ${err}\n`);
-				});
-		})
-		.catch((err) => {
-			console.log(`\nScreen capture error: ${err}\n`);
+			console.log(stderr);
+			resolve(stdout ? stdout : stderr);
 		});
+	});
+};
+
+const screenCapture = async () => {
+	try {
+		return await execShellCommand('screencapture -isc');
+	} catch (err) {
+		console.error(err);
+	}
+};
+
+const recognizeText = async (langId: string, imageFilePath: string) => {
+	try {
+		return await execShellCommand(
+			`tesseract -l ${langId} ${imageFilePath} -`
+		);
+	} catch (err) {
+		console.error(err);
+	}
+};
+
+const ocrImageToClipboard = async (langCode: string) => {
+	try {
+		await screenCapture();
+	} catch (err) {
+		console.error(`\nScreen capture error: ${err}\n`);
+	}
+
+	try {
+		await fs.writeFile(
+			path.join(app.getPath('temp'), 'temp.png'),
+			clipboard.readImage().toPNG(),
+			(err: string) => {
+				if (err) throw err;
+			}
+		);
+	} catch (err) {
+		console.error(`\nFile writing errors:\n${err}\n`);
+	}
+
+	try {
+		const ocrResult = await recognizeText(
+			langCode,
+			path.join(app.getPath('temp'), 'temp.png')
+		);
+		await clipboard.writeText(ocrResult);
+		await console.log(ocrResult);
+	} catch (err) {
+		console.error(`\nTesseract recognition error: ${err}\n`);
+	}
 };
 
 const createLangMenu = () => {
@@ -133,7 +142,7 @@ const createLangMenu = () => {
 		let langMenu: langMenuItem[] = [];
 
 		csv()
-			.fromFile(path.join(__dirname, '../src/tesseract-ocr.csv'))
+			.fromFile(path.join(app.getAppPath(), 'dist/tesseract-ocr.csv'))
 			.then((jsonArray: any[]) => {
 				jsonArray.forEach((lang) => {
 					// console.log(`${lang.langCode}: ${lang.language}`);
@@ -159,17 +168,13 @@ const createLangMenu = () => {
 				});
 				resolve(langMenu);
 			})
-			.catch((error: any) => {
+			.catch((error: string) => {
 				if (error) {
 					reject(error);
 					return;
 				}
 			});
 	});
-};
-
-const setLang = (checkedLangCode: string) => {
-	langCode = checkedLangCode;
 };
 
 app.dock.hide();

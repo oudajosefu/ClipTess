@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 const path = require('path');
 const fs = require('fs');
 const csv = require('csvtojson');
@@ -7,14 +16,14 @@ const { exec } = require('child_process');
 const GLOBAL_SHORTCUT = 'CommandOrControl+Option+Shift+C';
 let langCode = 'jpn';
 app.whenReady().then(() => {
-    const tray = new Tray(path.join(__dirname, '../assets/camera.metering.matrix@3x.png'));
+    const tray = new Tray(path.join(app.getAppPath(), 'assets/camera.metering.matrix@3x.png'));
     tray.setIgnoreDoubleClickEvents(true);
     createLangMenu().then((langMenu) => {
         // console.log(langMenu);
         tray.setContextMenu(Menu.buildFromTemplate([
             {
                 id: 'screenshot',
-                icon: path.join(__dirname, '../assets/plus.viewfinder@3x.png'),
+                icon: path.join(app.getAppPath(), 'assets/plus.viewfinder@3x.png'),
                 label: ' Screenshot -> Clipboard',
                 type: 'normal',
                 accelerator: GLOBAL_SHORTCUT,
@@ -44,57 +53,67 @@ app.whenReady().then(() => {
 app.on('will-quit', () => {
     globalShortcut.unregisterAll();
 });
-const screenCapture = () => {
+const setLang = (checkedLangCode) => {
+    langCode = checkedLangCode;
+};
+const execShellCommand = (cmd) => {
     return new Promise((resolve, reject) => {
-        exec('screencapture -isc', (error, stdout, stderr) => {
+        exec(cmd, (error, stdout, stderr) => {
             if (error) {
+                console.error(error);
                 reject(error);
-                return;
             }
-            resolve(stdout);
+            console.log(stderr);
+            resolve(stdout ? stdout : stderr);
         });
     });
 };
-const recognizeText = (langId, imageFilePath) => {
-    return new Promise((resolve, reject) => {
-        exec(`tesseract -l ${langId} ${imageFilePath} -`, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            resolve(stdout);
+const screenCapture = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        return yield execShellCommand('screencapture -isc');
+    }
+    catch (err) {
+        console.error(err);
+    }
+});
+const recognizeText = (langId, imageFilePath) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        return yield execShellCommand(`tesseract -l ${langId} ${imageFilePath} -`);
+    }
+    catch (err) {
+        console.error(err);
+    }
+});
+const ocrImageToClipboard = (langCode) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield screenCapture();
+    }
+    catch (err) {
+        console.error(`\nScreen capture error: ${err}\n`);
+    }
+    try {
+        yield fs.writeFile(path.join(app.getPath('temp'), 'temp.png'), clipboard.readImage().toPNG(), (err) => {
+            if (err)
+                throw err;
         });
-    });
-};
-const ocrImageToClipboard = (langCode) => {
-    screenCapture()
-        .then((stdout) => {
-        try {
-            fs.writeFile(path.join(__dirname, '../src/temp.png'), clipboard.readImage().toPNG(), (err) => {
-                if (err)
-                    throw err;
-            });
-        }
-        catch (err) {
-            console.log(`\nFile writing errors:\n${err}\n`);
-        }
-        recognizeText(langCode, path.join(__dirname, '../src/temp.png'))
-            .then((stdoutText) => {
-            clipboard.writeText(stdoutText);
-        })
-            .catch((err) => {
-            console.log(`\nTesseract recognition error: ${err}\n`);
-        });
-    })
-        .catch((err) => {
-        console.log(`\nScreen capture error: ${err}\n`);
-    });
-};
+    }
+    catch (err) {
+        console.error(`\nFile writing errors:\n${err}\n`);
+    }
+    try {
+        const ocrResult = yield recognizeText(langCode, path.join(app.getPath('temp'), 'temp.png'));
+        yield clipboard.writeText(ocrResult);
+        yield console.log(ocrResult);
+    }
+    catch (err) {
+        console.error(`\nTesseract recognition error: ${err}\n`);
+    }
+});
 const createLangMenu = () => {
     return new Promise((resolve, reject) => {
         let langMenu = [];
         csv()
-            .fromFile(path.join(__dirname, '../src/tesseract-ocr.csv'))
+            .fromFile(path.join(app.getAppPath(), 'dist/tesseract-ocr.csv'))
             .then((jsonArray) => {
             jsonArray.forEach((lang) => {
                 // console.log(`${lang.langCode}: ${lang.language}`);
@@ -124,7 +143,5 @@ const createLangMenu = () => {
         });
     });
 };
-const setLang = (checkedLangCode) => {
-    langCode = checkedLangCode;
-};
 app.dock.hide();
+//# sourceMappingURL=main.js.map
