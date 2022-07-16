@@ -15,7 +15,7 @@ const { app, Tray, Menu, MenuItem, clipboard, globalShortcut } = require('electr
 const { exec } = require('child_process');
 const GLOBAL_SHORTCUT = 'CommandOrControl+Option+Shift+C';
 let langCode = 'jpn';
-app.whenReady().then(() => {
+app.whenReady().then(() => __awaiter(void 0, void 0, void 0, function* () {
     const tray = new Tray(path.join(app.getAppPath(), 'assets/camera.metering.matrix@3x.png'));
     tray.setIgnoreDoubleClickEvents(true);
     createLangMenu().then((langMenu) => {
@@ -49,7 +49,7 @@ app.whenReady().then(() => {
     globalShortcut.register(GLOBAL_SHORTCUT, () => {
         ocrImageToClipboard(langCode);
     });
-});
+}));
 app.on('will-quit', () => {
     globalShortcut.unregisterAll();
 });
@@ -63,26 +63,16 @@ const execShellCommand = (cmd) => {
                 console.error(error);
                 reject(error);
             }
-            console.log(stderr);
+            // console.log(stderr);
             resolve(stdout ? stdout : stderr);
         });
     });
 };
 const screenCapture = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        return yield execShellCommand('screencapture -isc');
-    }
-    catch (err) {
-        console.error(err);
-    }
+    return yield execShellCommand('screencapture -isc');
 });
 const recognizeText = (langId, imageFilePath) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        return yield execShellCommand(`tesseract -l ${langId} ${imageFilePath} -`);
-    }
-    catch (err) {
-        console.error(err);
-    }
+    return yield execShellCommand(`/opt/homebrew/bin/tesseract -l ${langId} ${imageFilePath} -`);
 });
 const ocrImageToClipboard = (langCode) => __awaiter(void 0, void 0, void 0, function* () {
     try {

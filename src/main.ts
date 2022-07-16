@@ -22,7 +22,7 @@ interface langMenuItem {
 const GLOBAL_SHORTCUT: string = 'CommandOrControl+Option+Shift+C';
 let langCode: string = 'jpn';
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
 	const tray = new Tray(
 		path.join(app.getAppPath(), 'assets/camera.metering.matrix@3x.png')
 	);
@@ -82,28 +82,20 @@ const execShellCommand = (cmd: string) => {
 				console.error(error);
 				reject(error);
 			}
-			console.log(stderr);
+			// console.log(stderr);
 			resolve(stdout ? stdout : stderr);
 		});
 	});
 };
 
 const screenCapture = async () => {
-	try {
-		return await execShellCommand('screencapture -isc');
-	} catch (err) {
-		console.error(err);
-	}
+	return await execShellCommand('screencapture -isc');
 };
 
 const recognizeText = async (langId: string, imageFilePath: string) => {
-	try {
-		return await execShellCommand(
-			`tesseract -l ${langId} ${imageFilePath} -`
-		);
-	} catch (err) {
-		console.error(err);
-	}
+	return await execShellCommand(
+		`/opt/homebrew/bin/tesseract -l ${langId} ${imageFilePath} -`
+	);
 };
 
 const ocrImageToClipboard = async (langCode: string) => {
