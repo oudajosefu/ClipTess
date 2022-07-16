@@ -10,12 +10,12 @@ A simple Electron-built open-source screenshot app that runs Tesseract on a macO
 ## Global shortcut is: **`⌘⌥⇧C`**
 
 ## Prerequisites
-- Must have [Tesseract](https://tesseract-ocr.github.io/tessdoc/Installation.html#macos) installed on the command line for each language you intend to use ClipTess for
-  - Best way to download on macOS is through [Homebrew](https://brew.sh/):
+- Must have [Tesseract](https://tesseract-ocr.github.io/tessdoc/Installation.html#macos) installed on the command line for each language you intend to use ClipTess for. Must be installed through Homebrew as path to command used is `/opt/homebrew/bin/tesseract`
+  - How to download Tesseract through [Homebrew](https://brew.sh/):
     ```bash
     brew install tesseract
     ```
-  - To install all languages, run:
+  - Afterwards, to install all languages, run:
     ```bash
     brew install tesseract-lang 
     ```
@@ -37,6 +37,7 @@ By using Tesseract through the command line, I've pretty much found a way to mak
 
 ### To Do:
 - [ ] Allow for a method to change the global shortcut
+- [ ] Use any Tesseract path installed by user, possibly done through a submenu option or in preferences
 - [ ] Add a preferences window
 - [ ] Adapt `Change language` dropdown menu to user's locally installed Tesseract languages
 - [ ] Make compatible on Windows using its equivalent screen capture tool
