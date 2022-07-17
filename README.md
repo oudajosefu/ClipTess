@@ -7,16 +7,16 @@ A simple Electron-built open-source screenshot app that runs Tesseract on a macO
 - **Every language supported by Tesseract is supported by ClipTess**
 - **Language can be changed in the menu bar settings (Default is Japanese)**
 
-## Global shortcut is: **`⌘⌥⇧C`**
+## Global shortcut is: **`⌥⇧⌘C`**
 
 ## Prerequisites
 - Must have [Tesseract](https://tesseract-ocr.github.io/tessdoc/Installation.html#macos) installed on the command line for each language you intend to use ClipTess for. Must be installed through Homebrew as path to command used is `/opt/homebrew/bin/tesseract`
   - How to download Tesseract through [Homebrew](https://brew.sh/):
-    ```bash
+    ```sh
     brew install tesseract
     ```
   - Afterwards, to install all languages, run:
-    ```bash
+    ```sh
     brew install tesseract-lang 
     ```
   - Not all languages are needed, but all will still be displayed in the `Change language` dropdown menu
@@ -32,7 +32,8 @@ By using Tesseract through the command line, I've pretty much found a way to mak
 
 ## Development
 1. Clone repository to a local folder using whichever means you prefer. I personally prefer the Github Desktop app.
-2. Make sure to have [Typescript's](https://www.typescriptlang.org/download) `tsc` cli command globally installed in order to compile `main.ts` into Javascript.
+2. In the repository, run `yarn run tsc` everytime you want to test a change using `yarn electron .` in order for TypeScript's `tsc` compiler to compile all TypeScript files to JavaScript.
+   - (Optional) You can have [Typescript's](https://www.typescriptlang.org/download) `tsc` cli command globally installed instead and just run `tsc` everytime you want to compile the files.
 3. When you are done making changes, run `yarn make` to generate your app in the `out/` folder.
 
 ### To Do:
